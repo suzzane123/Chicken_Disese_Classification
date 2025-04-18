@@ -3,7 +3,7 @@ from config_entity import DataIngestionConfig
 import logging
 
 class AzureBlobSyncer: 
-    def __init__(self, config: DataIngestionConfig):
+    def __init__(self, config: DataIngestionConfig,):
         self.blob_service_client = BlobServiceClient.from_connection_string(config.connection_string)
         self.container_client = self.blob_service_client.get_container_client(config.container_name)
 
