@@ -36,3 +36,84 @@ class DataTransformation:
             return (labels_to_ids, ids_to_labels, df_train, df_test, df_val, unique_labels)
         except Exception as e:
             raise NerException(e, sys) from e
+        
+
+    def initiate_data_transformation(self) -> DataTransformationArtifacts:
+        logging.info("Entered the initiate_data_transformation method of Data transformation class")
+        try:
+            os.makedirs(
+                self.data_transformation_config.data_transformation_artifacts_dir,
+                exist_ok=True
+            )
+            logging.info(f"Created {os.path.basename(self.data_transformation_config.data_transformation_artifacts_dir)} directory .")
+
+            df = pd.read_csv(self.data_ingestion_artifacts.csv_data_file_path)
+            (
+                labels_to_ids,
+                ids_to_labels,
+                df_train, 
+                df_val, 
+                df_test,
+                unique_labels,
+            ) = self.splitting_data(df=df)
+            logging.info("Splitted the data")
+
+            self.utils.dump_pickle_file(
+                output_filepath = self.data_transformation_config.labels_to_ids_path,
+                data = labels_to_ids,
+            )
+            logging.info(f"Saved the labels to ids pickle file to Artiffacts directory
+                         filename - {os.path.basename(self.data_transformation_config.labels_to_ids_path)}")
+
+            self.utils.dump_pickle_file(
+                output_filepath = self.data_transformation_config.ids_to_labels_path,
+                data = ids_to_labels,
+            )
+            logging.info(f"Saved the labels to ids pickle file to Artiffacts directory
+                         filename - {os.path.basename(self.data_transformation_config.ids_to_labels_path)}")
+        
+            self.azure_blob_syncer.upload_file(
+                artifact_path= self.data_transformation_config.ids_to_labels_path,
+                artifact_name= IDS_TO_LABELS_FILE_NAME,
+            )
+            logging.info(f"Uploaded the ids to labels pickle file to Azure cloud storage. F
+                         filename - {os.path.basename(self.data_transformation_config.ids_to_labels_path)} ")
+
+            self.utils.dump_pickle_file(
+                output_filepath = self.data_transformation_config.df_train_path,
+                data = df_train,
+            )
+            logging.info(f"Saved the train df pickle file to Artifacts direcotory
+                         filename - {os.path.basename(self.data_transformation_config.df_train_path)}")
+
+            self.utils.dump_pickle_file(
+                output_filepath = self.data_transformation_config.df_test_path,
+                data = df_test
+            )
+            logging.info(f"Saved the test df pickle file to Artifacts directory 
+                         filename - {os.path.basename(self.data_transformation_config.df_test_path)}")
+
+            self.utils.dump_pickle_file(
+                output_filepath = self.data_transformation_config.df_val_path, 
+                data = df_val,
+            )
+            logging.info(f"Saved the validation df pickle file to Artifacts directory 
+                            filename = {os.path.basename(self.data_transformation_config.df_val_path)}")
+
+
+            data_transformation_artifacts = DataTransformationArtifacts(
+                labels_to_ids_path=self.data_transformation_config.labels_to_ids_path,
+                ids_to_labels_path = self.data_transformation_config.ids_to_labels_path,
+                df_train_path= self.data_transformation_config.df_train_path,
+                df_val_path= self.data_transformation_config.df_val_path,
+                df_test_path= self.data_transformation_config.df_test_path,
+                unique_labels_path= self.data_transformation_config.unique_labels_path,
+            )
+            logging.info("Exited the initiate_data_transformation method of Data Transformation class")
+
+            return data_transformation_artifacts
+        except Exception as e:
+            raise NerException(e,sys) from e
+
+
+        
